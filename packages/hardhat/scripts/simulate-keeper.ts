@@ -1,66 +1,112 @@
 import { ethers } from "hardhat";
 
 async function main() {
-  const aegisContract = await ethers.getContract("AegisSettlement");
-  const aegisAddress = await aegisContract.getAddress();
-  const aegis = await ethers.getContractAt("AegisSettlement", aegisAddress);
-  console.log("🤖 TURBO KEEPER STARTED");
-  console.log("⚡ Block Time: ~50ms");
+  // 1. ROBUST CONTRACT RETRIEVAL
+  // Use ethers.getContract which works best with hardhat-deploy
 
-  let currentPrice = 2500;
+  let aegis;
+  try {
+    aegis = await ethers.getContract("AegisSettlement");
+    console.log(`✅ Found AegisSettlement at: ${await aegis.getAddress()}`);
+  } catch (e) {
+    // FIX 1: Log the error 'e' so it is "used"
+    console.error("❌ Could not find AegisSettlement. Did you run 'yarn deploy'?", e);
+    process.exit(1);
+  }
+
+  let mockOracle = null;
+  try {
+    // Try to get the Mock Oracle. If on Sepolia, this will fail (expected).
+    mockOracle = await ethers.getContract("AegisMockOracle");
+    console.log(`✅ Found AegisMockOracle at: ${await mockOracle.getAddress()}`);
+  } catch (e) {
+    // FIX 2: Log the error 'e' here too
+    console.log("⚠️ No Mock Oracle found. Assuming Testnet/Production (Real Oracle). Debug:", e);
+    console.log("   -> Market simulation (Flash Crash) will be DISABLED.");
+  }
+
+  console.log("🤖 KEEPER STARTED");
 
   while (true) {
     try {
       const currentBlock = await ethers.provider.getBlockNumber();
-      const currentBatchId = await aegis.currentBatchId();
+      const batchId = await aegis.currentBatchId();
 
-      // 1. SIMULATE MARKET
-      // Normal: +/- $5
-      // Flash Crash (Every 20th block): Drop to $100
-      const isAttackBlock = currentBlock % 20 === 0;
+      const batch = await aegis.batches(batchId);
+      // SAFETY: Explicitly cast enum state.
+      // Struct: { ..., BatchState state; } -> State is the LAST field.
+      const state = Number(batch.state);
+      const stateName = ["OPEN", "ACCUM", "DISPUTE", "SETTLED", "VOID"][state];
 
-      if (isAttackBlock) {
-        console.log(`⚠️ FLASH CRASH AT BLOCK ${currentBlock}! Price: $100`);
-        currentPrice = 100;
-      } else {
-        const fluctuation = Math.floor(Math.random() * 10) - 5;
-        currentPrice += fluctuation;
-      }
+      console.log(`\n🧱 Block ${currentBlock} | Batch ${batchId} | State: ${stateName}`);
 
-      // 2. CHECK BATCH STATUS
-      const batch = await aegis.batches(currentBatchId);
-      const endBlock = Number(batch[2]);
-      const state = Number(batch[13]); // BatchState enum
-
-      const DISPUTE = 25;
-      const SAFETY = 64;
-      const SETTLEMENT_TARGET = endBlock + DISPUTE + SAFETY;
-
-      // 3. EXECUTE
-      if (state === 0 || state === 1) {
-        // OPEN or ACCUMULATING
-        console.log(`🧱 Block ${currentBlock}: Pushing $${currentPrice}...`);
-
-        const tx = await aegis.updateAccumulator(ethers.parseUnits(currentPrice.toString(), 18));
-        await tx.wait(); // Waits ~50ms
-      } else if (currentBlock > SETTLEMENT_TARGET && state !== 3 && state !== 4) {
-        // READY TO SETTLE
-        console.log("⚖️ Finality Reached. Settling...");
-        const tx = await aegis.settleBatch(currentBatchId);
+      // --- STATE 0: OPEN ---
+      if (state === 0) {
+        console.log("   > Closing batch to start Gauntlet...");
+        const tx = await aegis.closeBatch();
         await tx.wait();
-        console.log("🎉 BATCH SETTLED!");
-      } else {
-        console.log(`⏳ Block ${currentBlock}: Waiting for Finality...`);
-        // We don't need a sleep here because blocks move fast,
-        // but we add a tiny delay to stop CPU spinning
-        await new Promise(r => setTimeout(r, 200));
+        console.log("   ✅ Batch Closed.");
       }
+
+      // --- PIPELINE MANAGEMENT (Check Previous Batch) ---
+      if (batchId > 1) {
+        const prevBatchId = Number(batchId) - 1;
+        const prevBatch = await aegis.batches(prevBatchId);
+        const pbState = Number(prevBatch.state);
+
+        if (pbState !== 3 && pbState !== 4) {
+          // If not Settled/Void
+          console.log(
+            `   > Pipeline Batch ${prevBatchId} State: ${["OPEN", "ACCUM", "DISPUTE", "SETTLED", "VOID"][pbState]}`,
+          );
+        }
+
+        if (pbState === 1) {
+          // ACCUMULATING
+          const endBlock = Number(prevBatch.endBlock);
+
+          if (currentBlock <= endBlock) {
+            // 1. Manipulate Price (If Mock exists)
+            if (mockOracle) {
+              let price = 2000;
+              if (currentBlock % 10 === 0) {
+                price = 200; // Flash crash
+                console.log("   ⚠️ INJECTING FLASH CRASH ($200)");
+              }
+              // Chainlink uses 8 decimals
+              await (await mockOracle.updateAnswer(ethers.parseUnits(price.toString(), 8))).wait();
+            }
+
+            // 2. Accumulate
+            console.log("   > Calling updateAccumulator()...");
+            // NO ARGUMENTS - Contract reads from Oracle
+            await (await aegis.updateAccumulator()).wait();
+          } else {
+            console.log("   > Ending Accumulation...");
+            await (await aegis.endAccumulation(prevBatchId)).wait();
+          }
+        } else if (pbState === 2) {
+          // DISPUTING
+          const disputeEnd = Number(prevBatch.disputeEndBlock);
+          const safety = Number(await aegis.REORG_SAFETY());
+
+          if (currentBlock > disputeEnd + safety) {
+            console.log(`   > Settling Batch ${prevBatchId}...`);
+            await (await aegis.settleBatch(prevBatchId)).wait();
+            console.log("   🎉 BATCH SETTLED");
+          } else {
+            console.log(`   ⏳ Waiting for Dispute/Finality (Target: ${disputeEnd + safety})`);
+          }
+        }
+      }
+
+      await new Promise(r => setTimeout(r, 2000));
     } catch (e: any) {
-      // Filter out noisy errors typical in fast loops
-      if (!e.message.includes("Already updated")) {
-        console.log(`Processing...`);
+      // Filter expected reverts to keep console clean
+      if (!e.message.includes("Window closed") && !e.message.includes("Too early") && !e.message.includes("Not open")) {
+        console.log("Loop Error:", e.message);
       }
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 2000));
     }
   }
 }

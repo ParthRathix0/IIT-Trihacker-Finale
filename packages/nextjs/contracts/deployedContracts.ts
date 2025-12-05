@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     AegisMockOracle: {
-      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
       abi: [
         {
           inputs: [
@@ -163,10 +163,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 1,
+      deployedOnBlock: 19918,
     },
     AegisSettlement: {
-      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
       abi: [
         {
           inputs: [
@@ -174,6 +174,16 @@ const deployedContracts = {
               internalType: "address",
               name: "_priceFeed",
               type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_accumulationWindow",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "_disputeWindow",
+              type: "uint256",
             },
           ],
           stateMutability: "nonpayable",
@@ -229,6 +239,19 @@ const deployedContracts = {
             },
           ],
           name: "AccumulatorUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+          ],
+          name: "BatchClosed",
           type: "event",
         },
         {
@@ -331,7 +354,51 @@ const deployedContracts = {
             {
               indexed: false,
               internalType: "uint256",
-              name: "blockOffset",
+              name: "endBlock",
+              type: "uint256",
+            },
+          ],
+          name: "DisputeWindowOpened",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              indexed: true,
+              internalType: "address",
+              name: "user",
+              type: "address",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amount",
+              type: "uint256",
+            },
+          ],
+          name: "EmergencyWithdrawal",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "index",
               type: "uint256",
             },
             {
@@ -364,8 +431,27 @@ const deployedContracts = {
           type: "event",
         },
         {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: true,
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "newEndBlock",
+              type: "uint256",
+            },
+          ],
+          name: "WindowExtended",
+          type: "event",
+        },
+        {
           inputs: [],
-          name: "BATCH_DURATION",
+          name: "ACCUMULATION_WINDOW",
           outputs: [
             {
               internalType: "uint256",
@@ -378,7 +464,7 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "DISPUTE_WINDOW",
+          name: "DISPUTE_EXTENSION",
           outputs: [
             {
               internalType: "uint256",
@@ -391,7 +477,7 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "HEARTBEAT",
+          name: "DISPUTE_WINDOW_INITIAL",
           outputs: [
             {
               internalType: "uint256",
@@ -404,7 +490,33 @@ const deployedContracts = {
         },
         {
           inputs: [],
-          name: "MAX_VOLATILITY_BPS",
+          name: "EMERGENCY_TIMEOUT",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "EXTENSION_TRIGGER",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "PRECISION",
           outputs: [
             {
               internalType: "uint256",
@@ -435,51 +547,18 @@ const deployedContracts = {
               name: "",
               type: "uint256",
             },
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
           ],
-          name: "batchLastUpdate",
+          name: "batchRoundIds",
           outputs: [
             {
-              internalType: "uint256",
+              internalType: "uint80",
               name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          name: "batchMaxPrice",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          name: "batchMinPrice",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
+              type: "uint80",
             },
           ],
           stateMutability: "view",
@@ -507,6 +586,11 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
+              name: "accumulationStartBlock",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
               name: "endBlock",
               type: "uint256",
             },
@@ -516,9 +600,19 @@ const deployedContracts = {
               type: "uint256",
             },
             {
-              internalType: "uint16",
+              internalType: "uint256",
               name: "validBlockCount",
-              type: "uint16",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "lastUpdatedBlock",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
+              name: "disputeEndBlock",
+              type: "uint256",
             },
             {
               internalType: "uint256",
@@ -546,21 +640,6 @@ const deployedContracts = {
               type: "uint256",
             },
             {
-              internalType: "uint256",
-              name: "minPrice",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "maxPrice",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "lastUpdatedBlock",
-              type: "uint256",
-            },
-            {
               internalType: "enum IAegis.BatchState",
               name: "state",
               type: "uint8",
@@ -573,48 +652,20 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "buyDeposits",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
+              name: "batchId",
               type: "uint256",
             },
           ],
-          stateMutability: "view",
+          name: "claim",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
-          inputs: [
-            {
-              internalType: "bytes",
-              name: "",
-              type: "bytes",
-            },
-          ],
-          name: "checkUpkeep",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "upkeepNeeded",
-              type: "bool",
-            },
-            {
-              internalType: "bytes",
-              name: "",
-              type: "bytes",
-            },
-          ],
-          stateMutability: "view",
+          inputs: [],
+          name: "closeBatch",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -648,48 +699,26 @@ const deployedContracts = {
           inputs: [
             {
               internalType: "uint256",
-              name: "",
+              name: "batchId",
               type: "uint256",
             },
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
           ],
-          name: "hasValidated",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
+          name: "emergencyWithdraw",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
           inputs: [
             {
               internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "",
+              name: "batchId",
               type: "uint256",
             },
           ],
-          name: "isScrubbed",
-          outputs: [
-            {
-              internalType: "bool",
-              name: "",
-              type: "bool",
-            },
-          ],
-          stateMutability: "view",
+          name: "endAccumulation",
+          outputs: [],
+          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -703,19 +732,6 @@ const deployedContracts = {
             },
           ],
           stateMutability: "view",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "bytes",
-              name: "",
-              type: "bytes",
-            },
-          ],
-          name: "performUpkeep",
-          outputs: [],
-          stateMutability: "nonpayable",
           type: "function",
         },
         {
@@ -747,42 +763,13 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
-              name: "blockOffset",
-              type: "uint256",
-            },
-            {
-              internalType: "uint256",
-              name: "badPrice",
+              name: "index",
               type: "uint256",
             },
           ],
           name: "scrubOutlier",
           outputs: [],
           stateMutability: "nonpayable",
-          type: "function",
-        },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-            {
-              internalType: "address",
-              name: "",
-              type: "address",
-            },
-          ],
-          name: "sellDeposits",
-          outputs: [
-            {
-              internalType: "uint256",
-              name: "",
-              type: "uint256",
-            },
-          ],
-          stateMutability: "view",
           type: "function",
         },
         {
@@ -812,14 +799,31 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "updateAccumulator",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "uint256",
               name: "",
               type: "uint256",
             },
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+            {
+              internalType: "uint8",
+              name: "",
+              type: "uint8",
+            },
           ],
-          name: "uniqueValidatorCount",
+          name: "userDeposits",
           outputs: [
             {
               internalType: "uint256",
@@ -830,25 +834,11 @@ const deployedContracts = {
           stateMutability: "view",
           type: "function",
         },
-        {
-          inputs: [
-            {
-              internalType: "uint256",
-              name: "price",
-              type: "uint256",
-            },
-          ],
-          name: "updateAccumulator",
-          outputs: [],
-          stateMutability: "nonpayable",
-          type: "function",
-        },
       ],
       inheritedFunctions: {
-        checkUpkeep: "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol",
         depositBuy: "contracts/interfaces/IAegis.sol",
         depositSell: "contracts/interfaces/IAegis.sol",
-        performUpkeep: "@chainlink/contracts/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol",
+        emergencyWithdraw: "contracts/interfaces/IAegis.sol",
         scrubOutlier: "contracts/interfaces/IAegis.sol",
         settleBatch: "contracts/interfaces/IAegis.sol",
         updateAccumulator: "contracts/interfaces/IAegis.sol",
@@ -856,7 +846,7 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 3,
+      deployedOnBlock: 19921,
     },
   },
 } as const;

@@ -4,42 +4,53 @@ import { DeployFunction } from "hardhat-deploy/types";
 const deployAegis: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
-  const network = await hre.ethers.provider.getNetwork();
+  const chainId = await hre.getChainId();
 
-  console.log(`\n📦 Deploying to network: ${hre.network.name} (Chain ID: ${network.chainId})`);
+  console.log(`\n📦 Deploying Aegis Protocol to chain ${chainId}...`);
 
   let oracleAddress: string;
+  let accumulationWindow: number;
+  let disputeWindow: number;
 
   // --- CONFIGURATION ---
-  const SEPOLIA_REAL_ORACLE = "0x694AA1769357215DE4FAC081bf1f309aDC325306"; // ETH/USD
+  if (chainId === "31337") {
+    // Localhost
+    console.log("   ➜ 🛠  Localhost detected. Deploying Mock Oracle...");
 
-  if (hre.network.name === "sepolia") {
-    console.log("🔗 Linking to REAL Chainlink Sepolia Feed...");
-    // We do NOT deploy a Mock. We use the official existing contract.
-    oracleAddress = SEPOLIA_REAL_ORACLE;
-  } else {
-    // FALLBACK: Localhost needs a Mock because Chainlink doesn't exist on your laptop.
-    console.log("⚠️ Localhost detected: Deploying MOCK Oracle...");
-    const mockOracle = await deploy("AegisMockOracle", {
+    // 1. Deploy Mock
+    const mockDeployment = await deploy("AegisMockOracle", {
       from: deployer,
-      args: [18, "2000000000000000000000"], // $2000
+      args: [8, 200000000000], // 8 decimals, $2000 initial price
       log: true,
       autoMine: true,
     });
-    oracleAddress = mockOracle.address;
+
+    oracleAddress = mockDeployment.address;
+    accumulationWindow = 5; // Fast for demo
+    disputeWindow = 5; // Fast for demo
+    console.log(`   ➜ 🧪 Mock Oracle Deployed at: ${oracleAddress}`);
+  } else {
+    // Sepolia or others
+    console.log("   ➜ 🌍 Testnet/Mainnet detected. Using Real Chainlink Oracle.");
+    // Sepolia ETH/USD Aggregator
+    oracleAddress = "0x694AA1769357215DE4FAC081bf1f309aDC325306";
+    accumulationWindow = 50; // Production Standard
+    disputeWindow = 20;
   }
 
-  // Deploy Core Protocol
+  // 2. Deploy Core Contract (with 3 arguments)
   await deploy("AegisSettlement", {
     from: deployer,
-    contract: "contracts/core/AegisSettlement.sol:AegisSettlement",
-    args: [oracleAddress], // Inject the Real (or Mock) Address
+    args: [oracleAddress, accumulationWindow, disputeWindow], // FIXED: 3 Arguments
     log: true,
     autoMine: true,
   });
 
-  console.log(`\n🛡️ Aegis Protocol Deployed!`);
-  console.log(`   Connected Oracle: ${oracleAddress}`);
+  const aegis = await hre.ethers.getContract("AegisSettlement", deployer);
+  console.log(`\n✅ AegisSettlement deployed at: ${await aegis.getAddress()}`);
+  console.log(`   - Oracle: ${oracleAddress}`);
+  console.log(`   - Acc Window: ${accumulationWindow}`);
+  console.log(`   - Dispute Window: ${disputeWindow}\n`);
 };
 
 export default deployAegis;
