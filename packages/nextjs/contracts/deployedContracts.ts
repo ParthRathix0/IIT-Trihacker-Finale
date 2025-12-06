@@ -7,7 +7,7 @@ import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 const deployedContracts = {
   31337: {
     AegisV3: {
-      address: "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44",
+      address: "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
       abi: [
         {
           inputs: [],
@@ -321,7 +321,7 @@ const deployedContracts = {
             {
               indexed: false,
               internalType: "uint256",
-              name: "initialWeight",
+              name: "stackId",
               type: "uint256",
             },
           ],
@@ -412,6 +412,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "CIRCUIT_BREAKER_THRESHOLD",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "COLLECTION_INTERVAL",
           outputs: [
             {
@@ -451,6 +464,19 @@ const deployedContracts = {
         },
         {
           inputs: [],
+          name: "HYDRA_THRESHOLD",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
           name: "MAX_PRICE_DEVIATION",
           outputs: [
             {
@@ -465,6 +491,19 @@ const deployedContracts = {
         {
           inputs: [],
           name: "MAX_STALENESS",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "NEIGHBOR_DEVIATION_PCT",
           outputs: [
             {
               internalType: "uint256",
@@ -504,6 +543,19 @@ const deployedContracts = {
         {
           inputs: [],
           name: "PRECISION",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "PROBATION_BATCHES",
           outputs: [
             {
               internalType: "uint256",
@@ -833,6 +885,11 @@ const deployedContracts = {
                 },
                 {
                   internalType: "uint256",
+                  name: "techStackId",
+                  type: "uint256",
+                },
+                {
+                  internalType: "uint256",
                   name: "lastPrice",
                   type: "uint256",
                 },
@@ -845,6 +902,11 @@ const deployedContracts = {
                   internalType: "bool",
                   name: "isActive",
                   type: "bool",
+                },
+                {
+                  internalType: "uint256",
+                  name: "successfulBatches",
+                  type: "uint256",
                 },
               ],
               internalType: "struct AegisV3.OracleInfo",
@@ -952,6 +1014,19 @@ const deployedContracts = {
           type: "function",
         },
         {
+          inputs: [],
+          name: "lastSettlementPrice",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+        },
+        {
           inputs: [
             {
               internalType: "address",
@@ -1005,6 +1080,11 @@ const deployedContracts = {
             },
             {
               internalType: "uint256",
+              name: "techStackId",
+              type: "uint256",
+            },
+            {
+              internalType: "uint256",
               name: "lastPrice",
               type: "uint256",
             },
@@ -1017,6 +1097,11 @@ const deployedContracts = {
               internalType: "bool",
               name: "isActive",
               type: "bool",
+            },
+            {
+              internalType: "uint256",
+              name: "successfulBatches",
+              type: "uint256",
             },
           ],
           stateMutability: "view",
@@ -1041,6 +1126,11 @@ const deployedContracts = {
               internalType: "address",
               name: "_oracleAddress",
               type: "address",
+            },
+            {
+              internalType: "uint256",
+              name: "_techStackId",
+              type: "uint256",
             },
           ],
           name: "registerOracle",
@@ -1114,10 +1204,10 @@ const deployedContracts = {
         renounceOwnership: "@openzeppelin/contracts/access/Ownable.sol",
         transferOwnership: "@openzeppelin/contracts/access/Ownable.sol",
       },
-      deployedOnBlock: 37,
+      deployedOnBlock: 15,
     },
     GoodOracle1: {
-      address: "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1",
+      address: "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
       abi: [
         {
           inputs: [
@@ -1327,10 +1417,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 25,
+      deployedOnBlock: 3,
     },
     GoodOracle2: {
-      address: "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
+      address: "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
       abi: [
         {
           inputs: [
@@ -1540,10 +1630,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 27,
+      deployedOnBlock: 5,
     },
     GoodOracle3: {
-      address: "0x68B1D87F95878fE05B998F19b66F4baba5De1aed",
+      address: "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
       abi: [
         {
           inputs: [
@@ -1753,10 +1843,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 29,
+      deployedOnBlock: 7,
     },
     MockWETH: {
-      address: "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+      address: "0x5FbDB2315678afecb367f032d93F642f64180aa3",
       abi: [
         {
           inputs: [],
@@ -2108,10 +2198,10 @@ const deployedContracts = {
         transfer: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
         transferFrom: "@openzeppelin/contracts/token/ERC20/ERC20.sol",
       },
-      deployedOnBlock: 23,
+      deployedOnBlock: 1,
     },
     SlightlyOffOracle: {
-      address: "0x3Aa5ebB10DC797CAC828524e59A333d0A371443c",
+      address: "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9",
       abi: [
         {
           inputs: [
@@ -2321,10 +2411,10 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 31,
+      deployedOnBlock: 9,
     },
     VolatileOracle: {
-      address: "0x59b670e9fA9D0A427751Af201D676719a970857b",
+      address: "0x0165878A594ca255338adfa4d48449f69242Eb8F",
       abi: [
         {
           inputs: [
@@ -2534,7 +2624,7 @@ const deployedContracts = {
         },
       ],
       inheritedFunctions: {},
-      deployedOnBlock: 34,
+      deployedOnBlock: 12,
     },
   },
 } as const;

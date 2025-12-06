@@ -7,6 +7,8 @@ import { DeployFunction } from "hardhat-deploy/types";
 const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
+  // We need ethers to interact with the deployed contract
+  const ethers = hre.ethers; 
 
   console.log("\n🚀 Deploying Aegis V3.0 Multi-Oracle System...\n");
 
@@ -22,18 +24,19 @@ const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnviron
   console.log(`✅ MockWETH deployed at: ${mockWETH.address}\n`);
 
   // Deploy 5 mock oracles with different characteristics
+  // ADDED: stackId for Hydra Defense (1=Chainlink, 2=Pyth, 3=API3)
   const oracleConfigs = [
-    { name: "GoodOracle1", price: 200000000000, deviation: 0, volatile: false }, // $2000
-    { name: "GoodOracle2", price: 200000000000, deviation: 0, volatile: false },
-    { name: "GoodOracle3", price: 200000000000, deviation: 0, volatile: false },
-    { name: "SlightlyOffOracle", price: 200000000000, deviation: 200, volatile: false }, // +2%
-    { name: "VolatileOracle", price: 200000000000, deviation: 0, volatile: true },
+    { name: "GoodOracle1",       price: 200000000000, deviation: 0,   volatile: false, stackId: 1 }, // Chainlink
+    { name: "GoodOracle2",       price: 200000000000, deviation: 0,   volatile: false, stackId: 1 }, // Chainlink
+    { name: "GoodOracle3",       price: 200000000000, deviation: 0,   volatile: false, stackId: 2 }, // Pyth
+    { name: "SlightlyOffOracle", price: 200000000000, deviation: 200, volatile: false, stackId: 2 }, // Pyth (+2%)
+    { name: "VolatileOracle",    price: 200000000000, deviation: 0,   volatile: true,  stackId: 3 }, // API3
   ];
 
-  const deployedOracles = [];
+  const deployedOracles: string[] = [];
 
   for (const config of oracleConfigs) {
-    console.log(`📡 Deploying ${config.name}...`);
+    console.log(`📡 Deploying ${config.name} (Stack: ${config.stackId})...`);
     const oracle = await deploy(config.name, {
       contract: "contracts/mocks/MockOracle.sol:MockOracle",
       from: deployer,
@@ -71,11 +74,12 @@ const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnviron
   console.log("⚙️  Setting up Aegis V3...\n");
   const aegisContract = await hre.ethers.getContractAt("AegisV3", aegisV3.address);
 
-  console.log("📝 Registering oracles...");
+  console.log("📝 Registering oracles with Hydra IDs...");
   for (let i = 0; i < deployedOracles.length; i++) {
-    const tx = await aegisContract.registerOracle(deployedOracles[i]);
+    // FIX: Pass the stackId to the registerOracle function
+    const tx = await aegisContract.registerOracle(deployedOracles[i], oracleConfigs[i].stackId);
     await tx.wait();
-    console.log(`   ✓ Oracle ${i + 1} registered: ${deployedOracles[i]}`);
+    console.log(`   ✓ Oracle ${i + 1} registered: ${deployedOracles[i]} (Stack ${oracleConfigs[i].stackId})`);
   }
 
   console.log("\n💰 Setting batch asset to MockWETH...");
@@ -91,9 +95,9 @@ const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnviron
   console.log(`   • AegisV3 Contract: ${aegisV3.address}`);
   console.log(`   • Trading Asset (WETH): ${mockWETH.address}`);
   console.log(`   • Oracles Registered: ${deployedOracles.length}`);
-  console.log("\n🔍 Oracle Details:");
-  deployedOracles.forEach((addr, i) => {
-    console.log(`   ${i + 1}. ${oracleConfigs[i].name}: ${addr}`);
+  console.log("\n🔍 Oracle Diversity Map:");
+  oracleConfigs.forEach((conf, i) => {
+    console.log(`   ${i + 1}. ${conf.name}: Stack ${conf.stackId}`);
   });
 
   console.log("\n📝 Next Steps:");
