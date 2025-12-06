@@ -55,7 +55,14 @@ const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnviron
 
     deployedOracles.push(oracle.address);
     console.log(`✅ ${config.name} deployed at: ${oracle.address}\n`);
+    
+    // Wait 5 seconds between deployments to avoid nonce issues
+    await new Promise(resolve => setTimeout(resolve, 5000));
   }
+
+  // Extra delay before deploying main contract
+  console.log("⏳ Waiting before main contract deployment...");
+  await new Promise(resolve => setTimeout(resolve, 10000));
 
   // Deploy main Aegis V3 contract
   console.log("🛡️  Deploying AegisV3 main contract...");

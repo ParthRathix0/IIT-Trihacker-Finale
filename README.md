@@ -7,8 +7,18 @@
 [![Built with Scaffold-ETH 2](https://img.shields.io/badge/Built%20with-Scaffold--ETH%202-blue)](https://scaffoldeth.io)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.0-363636?logo=solidity)](https://soliditylang.org/)
 [![Multi-Oracle](https://img.shields.io/badge/Multi--Oracle-Dynamic%20Weights-375bd2)](https://github.com)
+[![Live on Sepolia](https://img.shields.io/badge/Live-Sepolia%20Testnet-green)](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
 
 </div>
+
+---
+
+## 🚀 Live Deployment
+
+**Sepolia Testnet** (Verified & Operational)
+- **AegisV3 Contract**: [`0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1`](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
+- **5 Active Oracles**: Multi-oracle consensus operational
+- **Status**: ✅ Deployed & Tested
 
 ---
 
@@ -687,21 +697,51 @@ packages/
 ### Running Tests
 
 ```bash
+# Run all tests
 yarn hardhat test
-yarn hardhat coverage
+
+# Run with gas reporting
+yarn hardhat test --gas-reporter
+
+# Test on localhost
+yarn chain          # Terminal 1
+yarn deploy         # Terminal 2
 ```
 
 ### Deployment
 
+#### Local Development
 ```bash
-# Local
-yarn deploy --network localhost
+# Terminal 1: Start local chain
+yarn chain
 
-# Testnet
+# Terminal 2: Deploy contracts
+yarn deploy
+```
+
+#### Sepolia Testnet (Live Deployment ✅)
+```bash
+# Generate deployer wallet
+yarn generate
+
+# Fund wallet with Sepolia ETH from faucet
+
+# Deploy to Sepolia
 yarn deploy --network sepolia
+```
 
-# Mainnet
-yarn deploy --network mainnet
+**Live Deployment:**
+- **AegisV3**: [`0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1`](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
+- **5 Oracles**: Active and registered
+- **Status**: Fully functional on Sepolia testnet
+
+#### Testnet Demonstration
+```bash
+# Run live tests on Sepolia
+yarn hardhat run scripts/testnet-demo.ts --network sepolia
+
+# Verify oracle registration
+yarn hardhat run scripts/verify-oracles.ts --network sepolia
 ```
 
 ---
