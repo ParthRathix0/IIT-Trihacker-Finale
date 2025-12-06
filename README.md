@@ -16,9 +16,21 @@
 ## 🚀 Live Deployment
 
 **Sepolia Testnet** (Verified & Operational)
-- **AegisV3 Contract**: [`0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1`](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
-- **5 Active Oracles**: Multi-oracle consensus operational
-- **Status**: ✅ Deployed & Tested
+
+### Main Contract
+- **AegisV3**: [`0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1`](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
+
+### Price Oracles (5 Active)
+1. **GoodOracle1**: [`0xd183695ef91510D3a324a89e0159Daed5d7A9F6e`](https://sepolia.etherscan.io/address/0xd183695ef91510D3a324a89e0159Daed5d7A9F6e)
+2. **GoodOracle2**: [`0xF78F12c4ef47e8e865F8DCFBB5bCe8CCCB2F9dAD`](https://sepolia.etherscan.io/address/0xF78F12c4ef47e8e865F8DCFBB5bCe8CCCB2F9dAD)
+3. **GoodOracle3**: [`0x9eE7202D855b7a87CdB6C97A2dbe1C005263Ec29`](https://sepolia.etherscan.io/address/0x9eE7202D855b7a87CdB6C97A2dbe1C005263Ec29)
+4. **SlightlyOffOracle**: [`0xf12Dd20D764be3F5D5Aea54cc19Af9F8b449796f`](https://sepolia.etherscan.io/address/0xf12Dd20D764be3F5D5Aea54cc19Af9F8b449796f)
+5. **VolatileOracle**: [`0x3AeFBc8A39B4fda7247C39Dbabe888Ae7E305cc9`](https://sepolia.etherscan.io/address/0x3AeFBc8A39B4fda7247C39Dbabe888Ae7E305cc9)
+
+### Supporting Contracts
+- **MockWETH**: [`0x46059af680A19f3D149B3B8049D3aecA9050914C`](https://sepolia.etherscan.io/address/0x46059af680A19f3D149B3B8049D3aecA9050914C)
+
+**Status**: ✅ All contracts deployed, tested, and operational
 
 ---
 
