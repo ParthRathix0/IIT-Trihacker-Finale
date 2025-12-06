@@ -34,6 +34,30 @@
 
 ---
 
+## 🎬 Quick Demo for Judges
+
+**Interactive Demo Menu** (Recommended):
+```bash
+cd packages/hardhat
+./scripts/judge-demo.sh
+```
+
+**Individual Demos**:
+```bash
+# Run test suite (12-step batch lifecycle)
+./scripts/run-tests.sh
+
+# Show gas cost analysis (amortized costs)
+./scripts/show-gas-costs.sh
+
+# Verify Sepolia deployment (live contracts)
+npx hardhat run scripts/testnet-demo.ts --network sepolia
+```
+
+📚 **Full guide**: See [`DEMO_SCRIPTS.md`](packages/hardhat/DEMO_SCRIPTS.md) for detailed instructions
+
+---
+
 ## 📖 Overview
 
 **Aegis Protocol V3.0** is a revolutionary decentralized exchange (DEX) settlement mechanism that combines:

@@ -1,5 +1,92 @@
 # Testing Guide - AegisV3
 
+## 🎯 Quick Demo Commands for Judges
+
+### Interactive Demo Menu (⭐ RECOMMENDED)
+```bash
+cd packages/hardhat
+./scripts/judge-demo.sh
+```
+
+**Interactive options:**
+1. 🧪 Run Full Test Suite (12-step lifecycle)
+2. 💰 Show Gas Cost Analysis (amortized costs)
+3. 🌐 Verify Sepolia Deployment (live contracts)
+4. 📊 Show All (comprehensive demo)
+5. 🚪 Exit
+
+---
+
+### Individual Demo Scripts
+
+#### 1. Run Test Suite
+Shows complete batch lifecycle with settlement and weight updates:
+```bash
+cd packages/hardhat
+./scripts/run-tests.sh
+```
+
+**What you'll see:**
+- ✅ 4/4 tests passing (~1-2 seconds)
+- 💎 Settlement price: $2018 from 5 oracles
+- 📈 Oracle weight updates (110, 110, 109, 109, 109)
+- ⚡ Gas breakdown for each operation
+
+#### 2. Gas Cost Analysis
+Shows amortized costs at different batch sizes:
+```bash
+cd packages/hardhat
+./scripts/show-gas-costs.sh
+```
+
+**What you'll see:**
+```
+Batch Size    Gas per User    USD @ 15 gwei
+2 users       1,215,294       $0.069
+100 users     236,068         $0.013
+1000 users    218,082         $0.012
+
+vs Uniswap V3: +18% gas for 5-oracle security
+```
+
+#### 3. Verify Sepolia Deployment
+Checks live testnet contracts:
+```bash
+cd packages/hardhat
+npx hardhat run scripts/testnet-demo.ts --network sepolia
+```
+
+**What you'll see:**
+- 🌐 Live contract addresses with Etherscan links
+- 📡 All 5 oracles active and responding
+- 📊 Current batch information
+- ✅ Verification that protocol is deployed and operational
+
+#### 4. Quick Help Reference
+```bash
+cd packages/hardhat
+./scripts/demo-help.sh
+```
+
+Shows all available commands and quick results summary.
+
+---
+
+### ⚡ Super Quick Demo (30 seconds)
+```bash
+cd packages/hardhat
+echo "1" | ./scripts/judge-demo.sh
+```
+Auto-runs test suite with full output.
+
+---
+
+## 📚 Full Documentation
+- [`DEMO_SCRIPTS.md`](packages/hardhat/DEMO_SCRIPTS.md) - Detailed script documentation
+- [`QUICK_DEMO.md`](QUICK_DEMO.md) - Quick reference guide
+
+---
+
 ## Quick Start
 
 ### Prerequisites
@@ -461,6 +548,207 @@ const tx3 = await aegis.collectOraclePrices();
 const receipt3 = await tx3.wait();
 console.log("Collection gas:", receipt3.gasUsed.toString());
 ```
+
+---
+
+## Automated Test Suite
+
+### Running All Tests
+```bash
+cd packages/hardhat
+yarn test
+```
+
+**Test Coverage:**
+1. ✅ Contract deployment verification
+2. ✅ Oracle registration and verification
+3. ✅ Multiple oracle registration
+4. ✅ **Full batch lifecycle with weight updates** (comprehensive test)
+
+### Test 4: Full Batch Lifecycle (Main Demo Test)
+
+This comprehensive test demonstrates the complete protocol:
+
+**12-Step Process:**
+1. Deploy contracts (AegisV3, MockWETH)
+2. Register 5 oracles with different names
+3. Display initial weights (all 100)
+4. Fund users with WETH
+5. Users deposit (BUY/SELL)
+6. Enter ACCUMULATING phase, set oracle prices
+7. Collect oracle observations (3 times)
+8. Enter DISPUTING phase
+9. Enter SETTLING phase
+10. Execute settlement
+11. Display oracle weight updates
+12. Users claim filled orders
+
+**Key Outputs:**
+```
+Settlement Price: $2018.00
+(Calculated from oracle prices: $2000, $2000, $2040, $2100, $1950)
+
+Oracle Weight Updates:
+- Oracle 1 (Accurate):     100 → 110 (↑ +10)
+- Oracle 2 (VeryAccurate): 100 → 110 (↑ +10)
+- Oracle 3 (SlightlyOff):  100 → 109 (↑ +9)
+- Oracle 4 (ModeratelyOff):100 → 109 (↑ +9)
+- Oracle 5 (Volatile):     100 → 109 (↑ +9)
+```
+
+**Gas Measurements:**
+```
+Operation              Gas Used       Avg
+─────────────────────────────────────────
+deposit                145k-159k      152k
+collectOraclePrices    315k-583k      405k
+startAccumulation      59,963         60k
+startDispute           411,107        411k
+startSettling          61,488         61k
+executeSettlement      252,287        252k
+claim                  53k-75k        64k
+```
+
+### View Test Source
+The comprehensive test is in `test/Aegis.ts` (lines 68-238):
+```bash
+# View the test code
+cat packages/hardhat/test/Aegis.ts | grep -A 170 "Should complete full batch cycle"
+```
+
+### Running Specific Tests
+```bash
+# Run only deployment test
+yarn test --grep "Should deploy"
+
+# Run only oracle tests
+yarn test --grep "oracle"
+
+# Run full lifecycle test
+yarn test --grep "full batch cycle"
+```
+
+---
+
+## Gas Analysis Scripts
+
+### Detailed Gas Cost Breakdown
+
+The `show-gas-costs.sh` script provides detailed analysis:
+
+```bash
+cd packages/hardhat
+./scripts/show-gas-costs.sh
+```
+
+**Analysis includes:**
+
+1. **Direct User Costs:**
+   - Deposit: ~152,315 gas
+   - Claim: ~63,769 gas
+   - Total per user: ~216,084 gas
+
+2. **Shared Batch Costs (Amortized):**
+   - Oracle Collection (3x): ~1,213,575 gas
+   - Phase Transitions: ~784,845 gas
+   - Total shared: ~1,998,420 gas
+
+3. **Cost per User at Different Scales:**
+   ```
+   2 users:    1,215,294 gas ($0.069 @ 15 gwei)
+   10 users:     415,926 gas ($0.024 @ 15 gwei)
+   50 users:     256,052 gas ($0.015 @ 15 gwei)
+   100 users:    236,068 gas ($0.013 @ 15 gwei)
+   1000 users:   218,082 gas ($0.012 @ 15 gwei)
+   ```
+
+4. **Comparison with Uniswap V3:**
+   - Uniswap V3 Swap: ~200,000 gas (no oracle security)
+   - Aegis @ 100 users: ~236,000 gas (5-oracle consensus)
+   - **Premium: Only +18% for full oracle protection**
+
+### Economics at Scale
+
+**Break-even Point**: ~50 users per batch
+- Below 50: More expensive than direct swaps
+- Above 50: Competitive with direct swaps
+- Above 100: Only marginal premium for security
+
+**Optimal Efficiency**: 1000+ users per batch
+- Shared costs: Only ~2,000 gas per user
+- Total cost approaches theoretical minimum (216k gas)
+- ~1% overhead for multi-oracle consensus
+
+---
+
+## Continuous Integration
+
+### GitHub Actions (if configured)
+```yaml
+# .github/workflows/test.yml
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - run: yarn install
+      - run: yarn test
+```
+
+---
+
+## Additional Resources
+
+### Documentation Files
+- [`DEMO_SCRIPTS.md`](packages/hardhat/DEMO_SCRIPTS.md) - Complete demo script guide
+- [`DEMO_GUIDE.md`](packages/hardhat/DEMO_GUIDE.md) - Judge presentation playbook
+- [`DEPLOYMENT.md`](packages/hardhat/DEPLOYMENT.md) - Deployment instructions
+- [`QUICK_DEMO.md`](QUICK_DEMO.md) - Quick reference for demos
+- [`README.md`](README.md) - Full protocol documentation
+
+### Live Deployment
+- **Network**: Sepolia Testnet
+- **AegisV3**: `0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1`
+- **Status**: ✅ Verified and operational with 5 active oracles
+
+### Contract Source
+- Main contract: `packages/hardhat/contracts/AegisV3.sol`
+- Test suite: `packages/hardhat/test/Aegis.ts`
+- Mock contracts: `packages/hardhat/contracts/mocks/`
+
+---
+
+## Summary
+
+**For Judges - Quick Demo:**
+```bash
+cd packages/hardhat
+./scripts/judge-demo.sh  # Interactive menu
+```
+
+**For Developers - Full Testing:**
+```bash
+yarn chain              # Terminal 1
+yarn deploy --reset     # Terminal 2
+yarn test               # Run test suite
+```
+
+**For Analysis - Gas Costs:**
+```bash
+./scripts/show-gas-costs.sh  # Detailed breakdown
+```
+
+**For Verification - Live Contracts:**
+```bash
+npx hardhat run scripts/testnet-demo.ts --network sepolia
+```
+
+---
+
+**Need Help?** Run `./scripts/demo-help.sh` for quick reference!
 
 ### Batch Size Testing
 
