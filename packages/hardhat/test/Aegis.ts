@@ -1,26 +1,61 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 
-describe("Aegis Protocol", function () {
-  it("Should deploy successfully", async function () {
+describe("AegisV3 Protocol", function () {
+  it("Should deploy AegisV3 successfully", async function () {
     const [owner] = await ethers.getSigners();
     
-    // Deploy Mock Oracle
-    const MockOracle = await ethers.getContractFactory("MockOracle");
-    const oracle = await MockOracle.deploy();
+    // Deploy AegisV3 contract
+    const AegisV3 = await ethers.getContractFactory("AegisV3");
+    const aegis = await AegisV3.deploy();
     
-    // Deploy Aegis
-    const Aegis = await ethers.getContractFactory("Aegis");
-    const aegis = await Aegis.deploy(await oracle.getAddress());
-    
+    // Verify deployment
     expect(await aegis.getAddress()).to.be.properAddress;
+    console.log("    ✓ AegisV3 deployed at:", await aegis.getAddress());
   });
 
-  it("Should allow deposits", async function () {
+  it("Should register and verify oracle", async function () {
     const [owner] = await ethers.getSigners();
     
-    // Setup: Deploy mock token, oracle, aegis...
-    // This would mirror the logic in the Foundry test but in TS
-    // For now, just ensuring deployment works is a good start!
+    // Deploy Mock Oracle with initial price of $2000
+    const MockOracle = await ethers.getContractFactory("MockOracle");
+    const oracle = await MockOracle.deploy(200000000000); // 8 decimals
+    const oracleAddress = await oracle.getAddress();
+    
+    // Deploy AegisV3
+    const AegisV3 = await ethers.getContractFactory("AegisV3");
+    const aegis = await AegisV3.deploy();
+    
+    // Register oracle
+    await aegis.registerOracle(oracleAddress);
+    
+    // Verify oracle registration
+    const oracleInfo = await aegis.getOracleInfo(1);
+    expect(oracleInfo.oracleAddress).to.equal(oracleAddress);
+    expect(oracleInfo.isActive).to.be.true;
+    expect(oracleInfo.weight).to.equal(100); // Default weight
+    
+    console.log("    ✓ Oracle registered with weight:", oracleInfo.weight.toString());
+  });
+
+  it("Should register multiple oracles", async function () {
+    const [owner] = await ethers.getSigners();
+    
+    // Deploy AegisV3
+    const AegisV3 = await ethers.getContractFactory("AegisV3");
+    const aegis = await AegisV3.deploy();
+    
+    // Deploy and register 3 oracles
+    const MockOracle = await ethers.getContractFactory("MockOracle");
+    
+    for (let i = 1; i <= 3; i++) {
+      const oracle = await MockOracle.deploy(200000000000);
+      await aegis.registerOracle(await oracle.getAddress());
+      
+      const oracleInfo = await aegis.getOracleInfo(i);
+      expect(oracleInfo.isActive).to.be.true;
+    }
+    
+    console.log("    ✓ Successfully registered 3 oracles");
   });
 });

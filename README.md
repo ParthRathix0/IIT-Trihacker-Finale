@@ -7,8 +7,30 @@
 [![Built with Scaffold-ETH 2](https://img.shields.io/badge/Built%20with-Scaffold--ETH%202-blue)](https://scaffoldeth.io)
 [![Solidity](https://img.shields.io/badge/Solidity-^0.8.0-363636?logo=solidity)](https://soliditylang.org/)
 [![Multi-Oracle](https://img.shields.io/badge/Multi--Oracle-Dynamic%20Weights-375bd2)](https://github.com)
+[![Live on Sepolia](https://img.shields.io/badge/Live-Sepolia%20Testnet-green)](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
 
 </div>
+
+---
+
+## 🚀 Live Deployment
+
+**Sepolia Testnet** (Verified & Operational)
+
+### Main Contract
+- **AegisV3**: [`0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1`](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
+
+### Price Oracles (5 Active)
+1. **GoodOracle1**: [`0xd183695ef91510D3a324a89e0159Daed5d7A9F6e`](https://sepolia.etherscan.io/address/0xd183695ef91510D3a324a89e0159Daed5d7A9F6e)
+2. **GoodOracle2**: [`0xF78F12c4ef47e8e865F8DCFBB5bCe8CCCB2F9dAD`](https://sepolia.etherscan.io/address/0xF78F12c4ef47e8e865F8DCFBB5bCe8CCCB2F9dAD)
+3. **GoodOracle3**: [`0x9eE7202D855b7a87CdB6C97A2dbe1C005263Ec29`](https://sepolia.etherscan.io/address/0x9eE7202D855b7a87CdB6C97A2dbe1C005263Ec29)
+4. **SlightlyOffOracle**: [`0xf12Dd20D764be3F5D5Aea54cc19Af9F8b449796f`](https://sepolia.etherscan.io/address/0xf12Dd20D764be3F5D5Aea54cc19Af9F8b449796f)
+5. **VolatileOracle**: [`0x3AeFBc8A39B4fda7247C39Dbabe888Ae7E305cc9`](https://sepolia.etherscan.io/address/0x3AeFBc8A39B4fda7247C39Dbabe888Ae7E305cc9)
+
+### Supporting Contracts
+- **MockWETH**: [`0x46059af680A19f3D149B3B8049D3aecA9050914C`](https://sepolia.etherscan.io/address/0x46059af680A19f3D149B3B8049D3aecA9050914C)
+
+**Status**: ✅ All contracts deployed, tested, and operational
 
 ---
 
@@ -687,21 +709,51 @@ packages/
 ### Running Tests
 
 ```bash
+# Run all tests
 yarn hardhat test
-yarn hardhat coverage
+
+# Run with gas reporting
+yarn hardhat test --gas-reporter
+
+# Test on localhost
+yarn chain          # Terminal 1
+yarn deploy         # Terminal 2
 ```
 
 ### Deployment
 
+#### Local Development
 ```bash
-# Local
-yarn deploy --network localhost
+# Terminal 1: Start local chain
+yarn chain
 
-# Testnet
+# Terminal 2: Deploy contracts
+yarn deploy
+```
+
+#### Sepolia Testnet (Live Deployment ✅)
+```bash
+# Generate deployer wallet
+yarn generate
+
+# Fund wallet with Sepolia ETH from faucet
+
+# Deploy to Sepolia
 yarn deploy --network sepolia
+```
 
-# Mainnet
-yarn deploy --network mainnet
+**Live Deployment:**
+- **AegisV3**: [`0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1`](https://sepolia.etherscan.io/address/0xe8C3672A7348Fe8fF81814C42f1bf411D69C39b1)
+- **5 Oracles**: Active and registered
+- **Status**: Fully functional on Sepolia testnet
+
+#### Testnet Demonstration
+```bash
+# Run live tests on Sepolia
+yarn hardhat run scripts/testnet-demo.ts --network sepolia
+
+# Verify oracle registration
+yarn hardhat run scripts/verify-oracles.ts --network sepolia
 ```
 
 ---
