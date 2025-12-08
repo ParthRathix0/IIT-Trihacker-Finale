@@ -125,7 +125,10 @@ const BatchStatus = ({ contractAddress, abi }: { contractAddress: string; abi: a
       highlightPulse ? "border-blue-400 shadow-lg shadow-blue-500/50 scale-[1.02]" : "border-slate-700"
     }`}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-2xl font-bold text-white">Batch #{batchInfo?.batchId}</h2>
+        <div>
+          <h2 className="text-2xl font-bold text-white">Batch #{batchInfo?.batchId}</h2>
+          <p className="text-xs text-slate-500 font-mono mt-1">Contract: {contractAddress}</p>
+        </div>
         <div className={`${stateColors[batchInfo?.state as keyof typeof stateColors] || "bg-gray-500"} text-white px-4 py-2 rounded-full font-semibold`}>
           {batchInfo?.state}
         </div>

@@ -7,57 +7,78 @@ import { DeployFunction } from "hardhat-deploy/types";
 const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { deployer } = await hre.getNamedAccounts();
   const { deploy } = hre.deployments;
+  const network = hre.network.name;
 
   console.log("\n🚀 Deploying Aegis V3.0 Multi-Oracle System...\n");
 
-  // Deploy mock token for trading
-  console.log("📦 Deploying Mock WETH token...");
-  const mockWETH = await deploy("MockWETH", {
-    contract: "contracts/mocks/MockWETH.sol:MockWETH",
-    from: deployer,
-    args: [],
-    log: true,
-    autoMine: true,
-  });
-  console.log(`✅ MockWETH deployed at: ${mockWETH.address}\n`);
+  let mockWETHAddress;
+  let deployedOracles = [];
 
-  // Deploy 5 mock oracles with different characteristics
-  const oracleConfigs = [
-    { name: "GoodOracle1", price: 200000000000, deviation: 0, volatile: false }, // $2000
-    { name: "GoodOracle2", price: 200000000000, deviation: 0, volatile: false },
-    { name: "GoodOracle3", price: 200000000000, deviation: 0, volatile: false },
-    { name: "SlightlyOffOracle", price: 200000000000, deviation: 200, volatile: false }, // +2%
-    { name: "VolatileOracle", price: 200000000000, deviation: 0, volatile: true },
+  // Live Sepolia Addresses
+  const SEPOLIA_ORACLES = [
+    "0xd183695ef91510D3a324a89e0159Daed5d7A9F6e", // GoodOracle1
+    "0xF78F12c4ef47e8e865F8DCFBB5bCe8CCCB2F9dAD", // GoodOracle2
+    "0x9eE7202D855b7a87CdB6C97A2dbe1C005263Ec29", // GoodOracle3
+    "0xf12Dd20D764be3F5D5Aea54cc19Af9F8b449796f", // SlightlyOffOracle
+    "0x3AeFBc8A39B4fda7247C39Dbabe888Ae7E305cc9", // VolatileOracle
   ];
+  const SEPOLIA_WETH = "0x46059af680A19f3D149B3B8049D3aecA9050914C";
 
-  const deployedOracles = [];
-
-  for (const config of oracleConfigs) {
-    console.log(`📡 Deploying ${config.name}...`);
-    const oracle = await deploy(config.name, {
-      contract: "contracts/mocks/MockOracle.sol:MockOracle",
+  if (network === "sepolia") {
+    console.log("🌍 Using existing Sepolia contracts for Oracles and WETH...");
+    mockWETHAddress = SEPOLIA_WETH;
+    deployedOracles = SEPOLIA_ORACLES;
+  } else {
+    // Deploy mock token for trading
+    console.log("📦 Deploying Mock WETH token...");
+    const mockWETH = await deploy("MockWETH", {
+      contract: "contracts/mocks/MockWETH.sol:MockWETH",
       from: deployer,
-      args: [config.price],
+      args: [],
       log: true,
       autoMine: true,
     });
+    mockWETHAddress = mockWETH.address;
+    console.log(`✅ MockWETH deployed at: ${mockWETH.address}\n`);
 
-    // Configure oracle
-    const oracleContract = await hre.ethers.getContractAt("MockOracle", oracle.address);
-    if (config.deviation !== 0) {
-      await oracleContract.setDeviation(config.deviation);
-      console.log(`   ⚙️  Set deviation: ${config.deviation / 100}%`);
-    }
-    if (config.volatile) {
-      await oracleContract.setVolatile(true);
-      console.log(`   ⚙️  Enabled volatility`);
-    }
+    // Deploy 5 mock oracles with different characteristics
+    const oracleConfigs = [
+      { name: "GoodOracle1", price: 200000000000, deviation: 0, volatile: false }, // $2000
+      { name: "GoodOracle2", price: 200000000000, deviation: 0, volatile: false },
+      { name: "GoodOracle3", price: 200000000000, deviation: 0, volatile: false },
+      { name: "SlightlyOffOracle", price: 200000000000, deviation: 200, volatile: false }, // +2%
+      { name: "VolatileOracle", price: 200000000000, deviation: 0, volatile: true },
+    ];
 
-    deployedOracles.push(oracle.address);
-    console.log(`✅ ${config.name} deployed at: ${oracle.address}\n`);
-    
-    // Wait 5 seconds between deployments to avoid nonce issues
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    for (const config of oracleConfigs) {
+      console.log(`📡 Deploying ${config.name}...`);
+      const oracle = await deploy(config.name, {
+        contract: "contracts/mocks/MockOracle.sol:MockOracle",
+        from: deployer,
+        args: [config.price],
+        log: true,
+        autoMine: true,
+      });
+
+      // Configure oracle
+      if (oracle.newlyDeployed) {
+        const oracleContract = await hre.ethers.getContractAt("MockOracle", oracle.address);
+        if (config.deviation !== 0) {
+          await oracleContract.setDeviation(config.deviation);
+          console.log(`   ⚙️  Set deviation: ${config.deviation / 100}%`);
+        }
+        if (config.volatile) {
+          await oracleContract.setVolatile(true);
+          console.log(`   ⚙️  Enabled volatility`);
+        }
+      }
+
+      deployedOracles.push(oracle.address);
+      console.log(`✅ ${config.name} deployed at: ${oracle.address}\n`);
+      
+      // Wait 5 seconds between deployments to avoid nonce issues
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
   }
 
   // Extra delay before deploying main contract
@@ -80,15 +101,41 @@ const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnviron
 
   console.log("📝 Registering oracles...");
   for (let i = 0; i < deployedOracles.length; i++) {
-    const tx = await aegisContract.registerOracle(deployedOracles[i]);
-    await tx.wait();
-    console.log(`   ✓ Oracle ${i + 1} registered: ${deployedOracles[i]}`);
+    try {
+      // Check if already registered to save gas
+      const oracleInfo = await aegisContract.getOracleInfo(i + 1).catch(() => null);
+      if (!oracleInfo || oracleInfo.oracleAddress !== deployedOracles[i]) {
+        // Use techStackId 1 (Chainlink) for all for now, or rotate if needed
+        const techStackId = 1; 
+        const tx = await aegisContract.registerOracle(deployedOracles[i], techStackId);
+        await tx.wait();
+        console.log(`   ✓ Oracle ${i + 1} registered: ${deployedOracles[i]}`);
+      } else {
+        console.log(`   ✓ Oracle ${i + 1} already registered: ${deployedOracles[i]}`);
+      }
+    } catch (e: any) {
+      console.log(`   ⚠️ Error registering oracle ${i + 1}: ${e.message}`);
+    }
   }
 
   console.log("\n💰 Setting batch asset to MockWETH...");
-  const setAssetTx = await aegisContract.setBatchAsset(mockWETH.address);
-  await setAssetTx.wait();
-  console.log(`   ✓ Asset set to: ${mockWETH.address}`);
+  try {
+    const currentBatchId = await aegisContract.currentBatchId();
+    const batchInfo = await aegisContract.batches(currentBatchId);
+    // batchInfo is an array/object where the second element (index 1) is the asset address
+    // Struct: state, asset, openEnd, ...
+    const currentAsset = batchInfo[1]; // or batchInfo.asset if using typechain/ethers object
+
+    if (currentAsset !== mockWETHAddress) {
+      const setAssetTx = await aegisContract.setBatchAsset(mockWETHAddress);
+      await setAssetTx.wait();
+      console.log(`   ✓ Asset set to: ${mockWETHAddress}`);
+    } else {
+      console.log(`   ✓ Asset already set to: ${mockWETHAddress}`);
+    }
+  } catch (e: any) {
+    console.log(`   ⚠️ Error setting asset: ${e.message}`);
+  }
 
   // Print summary
   console.log("\n" + "=".repeat(80));
@@ -96,11 +143,11 @@ const deployAegisV3: DeployFunction = async function (hre: HardhatRuntimeEnviron
   console.log("=".repeat(80));
   console.log("\n📊 Deployment Summary:");
   console.log(`   • AegisV3 Contract: ${aegisV3.address}`);
-  console.log(`   • Trading Asset (WETH): ${mockWETH.address}`);
+  console.log(`   • Trading Asset (WETH): ${mockWETHAddress}`);
   console.log(`   • Oracles Registered: ${deployedOracles.length}`);
   console.log("\n🔍 Oracle Details:");
   deployedOracles.forEach((addr, i) => {
-    console.log(`   ${i + 1}. ${oracleConfigs[i].name}: ${addr}`);
+    console.log(`   ${i + 1}. Oracle ${i + 1}: ${addr}`);
   });
 
   console.log("\n📝 Next Steps:");
