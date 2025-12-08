@@ -9,6 +9,7 @@ import DepositForm from "./DepositForm";
 import DisputeWidget from "./DisputeWidget";
 import ClaimRewards from "./ClaimRewards";
 import OracleMonitor from "./OracleMonitor";
+import FullDemoFlow from "./FullDemoFlow";
 
 // Contract ABI
 const AEGIS_ABI = [
@@ -77,7 +78,7 @@ const AEGIS_ABI = [
 export default function AegisDashboard() {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
-  const [activeTab, setActiveTab] = useState<"deposit" | "dispute" | "claim" | "oracles">("deposit");
+  const [activeTab, setActiveTab] = useState<"deposit" | "dispute" | "claim" | "oracles" | "demo">("deposit");
 
   const contractConfig = useMemo(() => {
     const envAddressRaw = process.env.NEXT_PUBLIC_AEGIS_ADDRESS as string | undefined;
@@ -123,7 +124,7 @@ export default function AegisDashboard() {
 
         {/* Tabs Navigation */}
         <div className="flex gap-2 mb-6 border-b border-slate-700">
-          {["deposit", "dispute", "claim", "oracles"].map((tab) => (
+          {["deposit", "dispute", "claim", "oracles", "demo"].map(tab => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab as any)}
@@ -145,6 +146,7 @@ export default function AegisDashboard() {
             {activeTab === "dispute" && <DisputeWidget contractAddress={contractConfig.address} abi={contractConfig.abi} />}
             {activeTab === "claim" && <ClaimRewards contractAddress={contractConfig.address} abi={contractConfig.abi} />}
             {activeTab === "oracles" && <OracleMonitor contractAddress={contractConfig.address} abi={contractConfig.abi} />}
+            {activeTab === "demo" && <FullDemoFlow contractAddress={contractConfig.address} abi={contractConfig.abi} />}
           </div>
 
           {/* Sidebar Info */}

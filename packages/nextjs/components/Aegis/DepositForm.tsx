@@ -21,14 +21,17 @@ const DepositForm = ({ contractAddress, abi }: { contractAddress: string; abi: a
 
     try {
       setIsLoading(true);
-      const tx = await writeContractAsync({
+      await writeContractAsync({
         address: contractAddress as `0x${string}`,
         abi,
         functionName: "deposit",
-        args: [parseEther(amount), side === "BUY" ? 0 : 1],
+        args: [parseEther(amount), side === "BUY" ? 0n : 1n],
       });
-      toast.success(`${side} order placed!`);
+      toast.success(`${side} order placed successfully!`);
       setAmount("");
+      
+      // Scroll to BatchStatus at top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error: any) {
       toast.error(error.message || "Transaction failed");
     } finally {
@@ -93,6 +96,18 @@ const DepositForm = ({ contractAddress, abi }: { contractAddress: string; abi: a
         >
           {isLoading ? "Processing..." : `Place ${side} Order`}
         </button>
+
+        <div className="bg-slate-700 bg-opacity-50 rounded p-3 text-xs text-slate-300 space-y-1">
+          <div className="font-semibold text-white mb-2">📋 After Deposit:</div>
+          <div>1️⃣ <strong>OPEN (12 blocks)</strong> - Orders accumulate</div>
+          <div>2️⃣ <strong>ACCUMULATING (48 blocks)</strong> - Oracle prices collected every 4 blocks</div>
+          <div>3️⃣ <strong>DISPUTING (15 blocks)</strong> - Challenge settlement if needed</div>
+          <div>4️⃣ <strong>SETTLING (10 blocks)</strong> - Execute fills &amp; claim rewards</div>
+          <div className="text-slate-400 mt-2">
+            Total cycle: ~85 blocks ({" "}
+            {typeof window !== "undefined" && window.location.hostname.includes("localhost") ? "~2 min on local" : "~17 min on Sepolia"})
+          </div>
+        </div>
       </div>
     </div>
   );
